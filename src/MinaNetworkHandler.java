@@ -9,10 +9,12 @@ public class MinaNetworkHandler implements IoHandler{
 	
 	private MsgDispatcher msgDispatcher;
 	
+	
 	private HashMap<Long, IoSession> sessions=new HashMap<Long, IoSession>(2);
 	
    public void setDispatcher(MsgDispatcher dispatcher){
-	   this.msgDispatcher=dispatcher;	  
+	   this.msgDispatcher=dispatcher;
+	   this.msgDispatcher.setOfflineMessenger(OfflineMsgDispatcher.getInstance());
 	   this.msgDispatcher.start();
    }
 

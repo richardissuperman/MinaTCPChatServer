@@ -11,6 +11,7 @@ import org.apache.mina.core.session.IoSession;
 public class MsgDispatcher extends Thread {
 	
 	private HashMap<String,IoSession> map;
+	private OfflineMsgDispatcher offline;
 	
 	private volatile Queue<Msg> msgQueue=new LinkedList<Msg>();
 	
@@ -19,6 +20,10 @@ public class MsgDispatcher extends Thread {
 		
 		this.map=map;
 		
+	}
+	
+	public void setOfflineMessenger(OfflineMsgDispatcher dis){
+		this.offline=dis;
 	}
 	
 	
@@ -44,7 +49,9 @@ public class MsgDispatcher extends Thread {
 	
 	private void Login(String email, IoSession session){
 		map.put(email, session);
-		session.setAttribute("email", email);	
+		session.setAttribute("email", email);
+		//retrieve offline msg
+		
 	}
 	
 	
@@ -61,6 +68,7 @@ public class MsgDispatcher extends Thread {
 			receiver_session.write(text);
 		}
 		else {
+			//offline msg handling
 			sender_session.write("user is not online");
 		}
 		
