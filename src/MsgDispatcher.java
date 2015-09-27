@@ -19,6 +19,7 @@ public class MsgDispatcher extends Thread {
 	public MsgDispatcher(HashMap<String,IoSession> map){
 		
 		this.map=map;
+	
 		
 	}
 	
@@ -27,7 +28,7 @@ public class MsgDispatcher extends Thread {
 	}
 	
 	
-	private void handleMsg(Msg message){
+	private void handleMsg(Msg message) throws Exception{
 		if(message==null){
 			return;
 		}
@@ -47,16 +48,20 @@ public class MsgDispatcher extends Thread {
 	}
 	
 	
-	private void Login(String email, IoSession session){
+	private void Login(String email, IoSession session) throws Exception{
 		map.put(email, session);
 		session.setAttribute("email", email);
 		//retrieve offline msg
+		this.offline.dispatchOfflineMSg(session);
 		
 	}
 	
 	
-	private void sendMsg(Msg message){
-		
+	private void sendMsg(Msg message) throws Exception{
+		if(message.iosession.getAttribute("email")==null||message.iosession.getAttribute("email").equals("")){
+			message.iosession.write("please login first");
+			return;
+		}
 		String msg=message.msgbody;
 		IoSession sender_session=message.iosession;
 		String[] msgs=msg.split(";");
@@ -69,7 +74,8 @@ public class MsgDispatcher extends Thread {
 		}
 		else {
 			//offline msg handling
-			sender_session.write("user is not online");
+			sender_session.write("user is not online,writing msg to db ");
+			this.offline.sendOffileMsg(message, receiver);
 		}
 		
 	}
@@ -101,7 +107,12 @@ public class MsgDispatcher extends Thread {
 			while(!msgQueue.isEmpty()){
 				synchronized (this) {
 				    //System.out.println("dispatcher running");
-					handleMsg(msgQueue.poll());
+					try {
+						handleMsg(msgQueue.poll());
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}	
 			}
 		}
